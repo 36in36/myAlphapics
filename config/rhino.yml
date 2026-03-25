@@ -1,0 +1,99 @@
+project:
+  stage: mvp
+  mode: build
+
+value:
+  hypothesis: "Children can learn the alphabet faster and more engagingly with personalized family photos in interactive games than with generic flashcards or stock-image educational apps"
+  user: "Parents teaching preschool-age children (2-5 years old) the alphabet"
+  signals:
+    - name: engagement
+      description: "Kids complete full alphabet runs across multiple game modes"
+      target: "At least 3 game modes used per session"
+      measurable: false
+    - name: personalization
+      description: "Parents upload custom photos for letters"
+      target: "At least 10 of 26 letters have custom photos"
+      measurable: false
+
+# ── Features ─────────────────────────────────────────
+# Each feature declares what it delivers and for whom.
+# rhino eval reads these and has Claude judge the gap.
+#
+# maturity: planned → building → working → polished
+# weight: 1-5 (importance to value hypothesis)
+# depends_on: [feature_name] (what must work first)
+features:
+  game-modes:
+    delivers: "8 interactive learning games — letter animation, name game, press-the-letter, choose-from-2/3/4, ABC song, and word learning — each with resume/restart support"
+    for: "Preschool children (2-5) learning the alphabet through play"
+    code: ["src/app/play/"]
+    status: active
+    weight: 5
+    maturity: working
+
+  adaptive-learning:
+    delivers: "AI-driven Smart Practice that selects the 3 weakest letters, then guides the child through 5 progressive difficulty levels (watch → press → choose2 → choose3 → choose4)"
+    for: "Children who need targeted practice on letters they haven't mastered"
+    code: ["src/app/play/adaptive/page.tsx", "src/lib/adaptiveSession.ts", "src/lib/db.ts"]
+    status: active
+    weight: 5
+    maturity: working
+    depends_on: [game-modes]
+
+  photo-management:
+    delivers: "Upload and manage personalized family photos for each of the 26 letters, with image resizing and IndexedDB blob storage"
+    for: "Parents who want their child to learn letters using familiar family photos"
+    code: ["src/app/manage/page.tsx"]
+    status: active
+    weight: 4
+    maturity: working
+
+  progress-tracking:
+    delivers: "3-tab reports dashboard showing letter exposure counts, interaction accuracy/history with 7-day chart, and per-letter mastery grid with detail popups"
+    for: "Parents who want to monitor their child's learning progress"
+    code: ["src/app/reports/page.tsx", "src/lib/db.ts"]
+    status: active
+    weight: 3
+    maturity: working
+
+  celebrations:
+    delivers: "Confetti bursts, personalized praise with child's name and photo, sound effects (pop/cheer), and frequency-curved scheduling (more celebrations early, fewer later)"
+    for: "Children who need positive reinforcement to stay motivated"
+    code: ["src/app/components/Celebration.tsx", "src/lib/celebrationSchedule.ts", "src/lib/sounds.ts"]
+    status: active
+    weight: 3
+    maturity: working
+
+  pwa:
+    delivers: "Installable progressive web app with service worker caching (assets cached offline, network-first for HTML/JS), iOS install banner, and manifest for home screen"
+    for: "Parents who want the app available offline on tablets and phones"
+    code: ["public/sw.js", "public/manifest.json", "src/app/layout.tsx", "src/app/components/IOSInstallBanner.tsx"]
+    status: active
+    weight: 4
+    maturity: working
+
+  settings:
+    delivers: "Child name, profile photos (up to 5), game speed (relaxed/normal/quick), and custom word bank for Word Learning game"
+    for: "Parents configuring the app for their child"
+    code: ["src/app/settings/page.tsx"]
+    status: active
+    weight: 2
+    maturity: working
+
+  activation:
+    delivers: "6-digit code gate that verifies against remote API before unlocking the app, with auto-advance input and paste support"
+    for: "Product owner gating access to paying customers"
+    code: ["src/app/components/ActivationGate.tsx", "src/lib/db.ts"]
+    status: active
+    weight: 1
+    maturity: working
+
+scoring:
+  cache_ttl: 300
+  health_gate_threshold: 20
+  health_warn_threshold: 40
+  onboarding_cap: 50
+
+evals:
+  generative: true
+  beliefs_fallback: true

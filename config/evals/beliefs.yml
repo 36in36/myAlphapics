@@ -1,0 +1,329 @@
+# beliefs.yml — What must be true about this project
+#
+# Types:
+#   file_check     — file exists, contains string, min lines
+#   command_check  — run a shell command, exit 0 = pass (runs in project dir)
+#   llm_judge      — Claude evaluates code against a prompt (requires prompt: field)
+#   feature_review — Claude evaluates feature completeness
+#
+# Fields:
+#   id:        unique identifier
+#   belief:    human-readable description
+#   type:      one of the types above
+#   severity:  block (score = 0 if failing) | warn (flags but continues)
+#   path:      file or directory to check (file_check, llm_judge)
+#   contains:  string that must appear in the file (file_check)
+#   min_lines: minimum line count (file_check)
+#   command:   shell command to run (command_check)
+#   prompt:    evaluation question for Claude (llm_judge)
+#   feature:   feature name to scope context (llm_judge, feature_review)
+
+beliefs:
+
+  # ── Core — does the project know what it's for? ──
+
+  - id: has-value-hypothesis
+    belief: "Project has a defined value hypothesis"
+    type: file_check
+    path: "config/rhino.yml"
+    contains: "hypothesis:"
+    severity: block
+
+  - id: has-readme
+    belief: "README exists and explains the project"
+    type: file_check
+    path: "README.md"
+    min_lines: 5
+    severity: warn
+
+  - id: build-succeeds
+    belief: "Project builds without errors"
+    type: command_check
+    command: npm run build 2>&1 | tail -1
+    severity: block
+
+  - id: has-entry-point
+    belief: "App has a main entry point (layout.tsx)"
+    type: file_check
+    path: "src/app/layout.tsx"
+    contains: "RootLayout"
+    severity: block
+
+  # ── game-modes — 8 interactive learning games ──
+
+  - id: game-modes-play-hub
+    belief: "Play page lists all game modes"
+    type: file_check
+    path: "src/app/play/page.tsx"
+    contains: "GAMES"
+    feature: game-modes
+    severity: block
+
+  - id: game-modes-animation
+    belief: "Letter Animation game exists"
+    type: file_check
+    path: "src/app/play/animation/page.tsx"
+    min_lines: 20
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-choose4
+    belief: "Choose from 4 game exists (hardest multiple choice)"
+    type: file_check
+    path: "src/app/play/choose4/page.tsx"
+    min_lines: 20
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-namegame
+    belief: "Name Game exists"
+    type: file_check
+    path: "src/app/play/namegame/page.tsx"
+    min_lines: 20
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-abcsong
+    belief: "ABC Song game exists"
+    type: file_check
+    path: "src/app/play/abcsong/page.tsx"
+    min_lines: 20
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-words
+    belief: "Word Learning game exists"
+    type: file_check
+    path: "src/app/play/words/page.tsx"
+    min_lines: 20
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-resume
+    belief: "Games support resume via GameState"
+    type: file_check
+    path: "src/lib/db.ts"
+    contains: "saveGameState"
+    feature: game-modes
+    severity: warn
+
+  - id: game-modes-all-routes
+    belief: "All 8 game route directories exist"
+    type: command_check
+    command: "test -d src/app/play/animation && test -d src/app/play/namegame && test -d src/app/play/single && test -d src/app/play/choose2 && test -d src/app/play/choose3 && test -d src/app/play/choose4 && test -d src/app/play/abcsong && test -d src/app/play/words"
+    feature: game-modes
+    severity: block
+
+  # ── adaptive-learning — AI-driven Smart Practice ──
+
+  - id: adaptive-session-manager
+    belief: "Adaptive session manager handles level progression"
+    type: file_check
+    path: "src/lib/adaptiveSession.ts"
+    contains: "advanceAdaptiveSession"
+    feature: adaptive-learning
+    severity: block
+
+  - id: adaptive-focus-selection
+    belief: "Focus letter selection uses mastery + exposure + recency scoring"
+    type: file_check
+    path: "src/lib/db.ts"
+    contains: "selectFocusLetters"
+    feature: adaptive-learning
+    severity: block
+
+  - id: adaptive-five-levels
+    belief: "Adaptive mode has exactly 5 progressive levels"
+    type: file_check
+    path: "src/lib/adaptiveSession.ts"
+    contains: "animation"
+    feature: adaptive-learning
+    severity: warn
+
+  - id: adaptive-page-exists
+    belief: "Adaptive learning hub page exists with session management"
+    type: file_check
+    path: "src/app/play/adaptive/page.tsx"
+    contains: "AdaptiveLearningPage"
+    feature: adaptive-learning
+    severity: block
+
+  # ── photo-management — personalized letter photos ──
+
+  - id: photo-manage-page
+    belief: "Photo management page exists with upload and edit"
+    type: file_check
+    path: "src/app/manage/page.tsx"
+    contains: "handleFileChange"
+    feature: photo-management
+    severity: block
+
+  - id: photo-resize
+    belief: "Photos are resized before storage"
+    type: file_check
+    path: "src/app/manage/page.tsx"
+    contains: "resizeImage"
+    feature: photo-management
+    severity: warn
+
+  - id: photo-blob-storage
+    belief: "Photos stored as blobs in IndexedDB"
+    type: file_check
+    path: "src/lib/db.ts"
+    contains: "imageBlob"
+    feature: photo-management
+    severity: warn
+
+  # ── progress-tracking — reports dashboard ──
+
+  - id: reports-page
+    belief: "Reports page exists with tabs"
+    type: file_check
+    path: "src/app/reports/page.tsx"
+    contains: "ExposureTab"
+    feature: progress-tracking
+    severity: block
+
+  - id: reports-mastery-tab
+    belief: "Reports include mastery grid"
+    type: file_check
+    path: "src/app/reports/page.tsx"
+    contains: "MasteryTab"
+    feature: progress-tracking
+    severity: warn
+
+  - id: reports-interaction-tab
+    belief: "Reports include interaction history"
+    type: file_check
+    path: "src/app/reports/page.tsx"
+    contains: "InteractionTab"
+    feature: progress-tracking
+    severity: warn
+
+  - id: reports-comprehensive
+    belief: "Comprehensive report aggregation exists"
+    type: file_check
+    path: "src/lib/db.ts"
+    contains: "getComprehensiveReport"
+    feature: progress-tracking
+    severity: warn
+
+  # ── celebrations — positive reinforcement ──
+
+  - id: celebration-component
+    belief: "Celebration component exists with mini and full types"
+    type: file_check
+    path: "src/app/components/Celebration.tsx"
+    contains: "CelebrationProps"
+    feature: celebrations
+    severity: block
+
+  - id: celebration-schedule
+    belief: "Celebration frequency curve exists (front-loaded)"
+    type: file_check
+    path: "src/lib/celebrationSchedule.ts"
+    contains: "shouldCelebrate"
+    feature: celebrations
+    severity: warn
+
+  - id: celebration-confetti
+    belief: "Confetti integration exists"
+    type: file_check
+    path: "src/app/components/Celebration.tsx"
+    contains: "confetti"
+    feature: celebrations
+    severity: warn
+
+  - id: celebration-sounds
+    belief: "Sound effects (pop, cheer) exist"
+    type: file_check
+    path: "src/lib/sounds.ts"
+    min_lines: 5
+    feature: celebrations
+    severity: warn
+
+  # ── pwa — offline installable app ──
+
+  - id: pwa-service-worker
+    belief: "Service worker exists with caching strategy"
+    type: file_check
+    path: "public/sw.js"
+    contains: "CACHE_NAME"
+    feature: pwa
+    severity: block
+
+  - id: pwa-manifest
+    belief: "Web app manifest exists"
+    type: file_check
+    path: "public/manifest.json"
+    min_lines: 3
+    feature: pwa
+    severity: block
+
+  - id: pwa-sw-registration
+    belief: "Service worker is registered on page load"
+    type: file_check
+    path: "src/app/page.tsx"
+    contains: "serviceWorker.register"
+    feature: pwa
+    severity: warn
+
+  - id: pwa-ios-banner
+    belief: "iOS install banner component exists"
+    type: file_check
+    path: "src/app/components/IOSInstallBanner.tsx"
+    min_lines: 10
+    feature: pwa
+    severity: warn
+
+  - id: pwa-apple-meta
+    belief: "Apple PWA meta tags in layout"
+    type: file_check
+    path: "src/app/layout.tsx"
+    contains: "apple-mobile-web-app-capable"
+    feature: pwa
+    severity: warn
+
+  # ── settings — parent configuration ──
+
+  - id: settings-page
+    belief: "Settings page exists with name, speed, photos, word bank"
+    type: file_check
+    path: "src/app/settings/page.tsx"
+    contains: "handleSave"
+    feature: settings
+    severity: block
+
+  - id: settings-game-speed
+    belief: "Game speed setting exists (relaxed/normal/quick)"
+    type: file_check
+    path: "src/app/settings/page.tsx"
+    contains: "gameSpeed"
+    feature: settings
+    severity: warn
+
+  - id: settings-word-bank
+    belief: "Custom word bank setting exists"
+    type: file_check
+    path: "src/app/settings/page.tsx"
+    contains: "wordBank"
+    feature: settings
+    severity: warn
+
+  # ── activation — code gating ──
+
+  - id: activation-gate
+    belief: "Activation gate component exists with 6-digit input"
+    type: file_check
+    path: "src/app/components/ActivationGate.tsx"
+    contains: "activateApp"
+    feature: activation
+    severity: block
+
+  - id: activation-api
+    belief: "Activation verification calls remote API"
+    type: file_check
+    path: "src/lib/db.ts"
+    contains: "verify_code"
+    feature: activation
+    severity: warn
