@@ -7,6 +7,11 @@ let speechUnlocked = false;
 const isIOS = typeof navigator !== 'undefined' &&
   /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
 
+// Detect PWA standalone mode
+const isStandalone = typeof window !== 'undefined' &&
+  (window.matchMedia('(display-mode: standalone)').matches ||
+   (window.navigator as any).standalone === true);
+
 function loadVoices() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
   
@@ -45,20 +50,48 @@ function loadVoices() {
   }
 }
 
+// Unlock AudioContext with silent buffer — proven iOS fix
+function unlockAudioContext() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const ctx = new AudioContextClass();
+    // Create and play a tiny silent buffer — this is the proven iOS unlock
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    // Store globally for reuse
+    (window as any).__audioCtx = ctx;
+  } catch (e) {
+    console.warn('TTS: AudioContext unlock failed:', e);
+  }
+}
+
 // Track user interaction — required for speech on mobile
 function markInteraction() {
   if (userHasInteracted) return;
   userHasInteracted = true;
   
-  // "Warm up" the speech engine with a real (but inaudible) utterance
-  // Empty string doesn't work on iOS — use a space or short word at volume 0
+  // Unlock AudioContext with buffer trick (proven iOS fix)
+  unlockAudioContext();
+  
   if (window.speechSynthesis) {
     // Cancel anything pending first
     window.speechSynthesis.cancel();
     
-    const warmup = new SpeechSynthesisUtterance(' ');
-    warmup.volume = 0.01; // iOS ignores volume=0, use near-zero
-    warmup.rate = 2;      // Make it fast
+    const warmup = new SpeechSynthesisUtterance('.');
+    // iOS PWA needs actual volume — 0.01 gets ignored in standalone mode
+    warmup.volume = isStandalone && isIOS ? 0.1 : 0.01;
+    warmup.rate = 10; // Maximum speed to minimize audibility
+    warmup.pitch = 0.01;
     warmup.onend = () => {
       speechUnlocked = true;
       console.log('TTS: Speech unlocked after warmup');
@@ -71,16 +104,6 @@ function markInteraction() {
     window.speechSynthesis.speak(warmup);
     console.log('TTS: Warmup initiated after user interaction');
   }
-  
-  // Also warm up audio elements for sound effects
-  if (typeof Audio !== 'undefined') {
-    try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-    } catch {}
-  }
 }
 
 // Voices load async in Chrome — need to listen for the event
@@ -90,12 +113,29 @@ if (typeof window !== 'undefined') {
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }
   
-  // Listen for first user interaction — use multiple events for reliability
-  // In iOS PWA mode, touchstart is the most reliable
+  // Listen for user interaction
   const interactionEvents = ['click', 'touchstart', 'touchend', 'keydown'];
-  interactionEvents.forEach((evt) => {
-    document.addEventListener(evt, markInteraction, { once: true, capture: true });
-  });
+  
+  if (isIOS && isStandalone) {
+    // Persistent listeners — iOS PWA loses unlock between interactions
+    interactionEvents.forEach((evt) => {
+      document.addEventListener(evt, () => {
+        if (!speechUnlocked) {
+          markInteraction();
+        } else {
+          // Re-prime AudioContext in case it was suspended
+          const ctx = (window as any).__audioCtx;
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume();
+          }
+        }
+      }, { capture: true });
+    });
+  } else {
+    interactionEvents.forEach((evt) => {
+      document.addEventListener(evt, markInteraction, { once: true, capture: true });
+    });
+  }
 }
 
 // Chrome bug: speechSynthesis hangs after ~15s. Keep-alive with periodic resume.
@@ -178,6 +218,26 @@ function doSpeak(text: string, resolve: () => void) {
     
     startKeepAlive();
     window.speechSynthesis.speak(u);
+    
+    // iOS PWA workaround: if speaking doesn't start within 500ms, cancel and retry
+    if (isIOS) {
+      setTimeout(() => {
+        if (!window.speechSynthesis.speaking && !resolved) {
+          console.warn('TTS: iOS speech may have failed, retrying...');
+          window.speechSynthesis.cancel();
+          setTimeout(() => {
+            const retry = new SpeechSynthesisUtterance(text);
+            retry.lang = 'en-US';
+            retry.rate = 0.85;
+            retry.pitch = 1.1;
+            if (preferredVoice) retry.voice = preferredVoice;
+            retry.onend = safeResolve;
+            retry.onerror = safeResolve;
+            window.speechSynthesis.speak(retry);
+          }, 100);
+        }
+      }, 500);
+    }
     
     // Safety timeout — resolve if speech never fires onend
     setTimeout(safeResolve, 10000);
