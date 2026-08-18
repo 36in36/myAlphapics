@@ -1,26 +1,92 @@
-# myalphapics-web
+# Project: MyAlphaPics
 
-## Value Hypothesis
-Children can learn the alphabet faster and more engagingly with personalized family photos in interactive games than with generic flashcards or stock-image educational apps
+## Overview
+Kids' alphabet learning app — teaches ABCs using family photos. 8 game modes, text-to-speech, adaptive difficulty. Converted from Flutter Android to Next.js PWA. All data stored locally (no server/DB needed).
 
-## Features
-- **game-modes** (w:5) — 8 interactive learning games with resume support
-- **adaptive-learning** (w:5) — AI-driven Smart Practice selecting weakest letters across 5 progressive levels
-- **photo-management** (w:4) — Upload/manage personalized family photos for each letter
-- **pwa** (w:4) — Offline installable progressive web app with service worker
-- **progress-tracking** (w:3) — 3-tab reports dashboard (exposure, interaction, mastery)
-- **celebrations** (w:3) — Confetti, personalized praise, sound effects, frequency-curved scheduling
-- **settings** (w:2) — Child name, profile photos, game speed, word bank
-- **activation** (w:1) — 6-digit code gate verifying against remote API
+~100 organic waitlist signups. Long-tail SEO working: "teach ABCs with family pictures" = #1 on Google.
 
-## Do NOT Build
-<!-- Add things here that should never be built, to prevent drift -->
+**Status:** Production, active.
 
-## Configuration
-- Project config: `config/rhino.yml`
-- Assertions: `config/evals/beliefs.yml`
-- Plans: `.claude/plans/`
+## Location
+- **Local:** `C:\projects\myalphapics-web`
+- **App:** https://app.myalphapics.com (DO droplet 167.71.91.81, static export via Nginx)
+- **Landing/Marketing:** https://myalphapics.com (cPanel 172.96.177.199)
+- **Payments:** Stripe on cPanel ($19.95 one-time unlock)
+
+## Tech Stack
+- **Framework:** Next.js 16 (static export)
+- **Language:** TypeScript
+- **Storage:** IndexedDB via Dexie.js (all data local, no server)
+- **Audio:** Pre-generated ElevenLabs MP3s via AudioContext (speech), AudioContext (sound effects)
+- **Animations:** canvas-confetti
+- **PWA:** Service worker, installable on Android/iOS
+
+## Getting Started
+```bash
+cd C:\projects\myalphapics-web
+npm install
+
+# No .env needed — fully client-side app
+npm run dev  # port 3001 (BitHustle uses 3000)
+
+# For production build (static export):
+npm run build
+# Output in out/ directory, deploy via SCP to server
+```
+
+## Commands
+- **Dev:** `npm run dev` (port 3001)
+- **Build:** `npm run build` (static export)
+- **Start:** `npm start`
+- **Lint:** `npm run lint`
+- **Deploy:** SCP `out/` directory to DO droplet Nginx root for app.myalphapics.com
+
+## Project Structure
+```
+src/
+├── app/
+│   ├── components/     # Shared UI components
+│   ├── manage/         # Photo management per letter
+│   ├── play/           # Game modes
+│   │   ├── abcsong/    # ABC Song mode
+│   │   ├── adaptive/   # Adaptive difficulty
+│   │   ├── animation/  # Letter animations
+│   │   ├── choose2/    # Choose from 2
+│   │   ├── choose3/    # Choose from 3
+│   │   ├── choose4/    # Choose from 4
+│   │   ├── namegame/   # Name the letter
+│   │   ├── single/     # Single letter practice
+│   │   ├── smart/      # Smart Practice (mastery-based)
+│   │   └── words/      # Word learning
+│   ├── reports/        # Progress reports
+│   ├── seed/           # Demo seed data for screenshots
+│   └── settings/       # App settings
+└── lib/                # Dexie DB, utilities
+```
+
+## Architecture & Patterns
+- **Fully client-side** — no server, no API calls, no user accounts
+- IndexedDB (Dexie.js) for all persistence (photos, progress, settings)
+- Static export (`next export`) with `images: { unoptimized: true }`
+- `trailingSlash: true` required for subdirectory pages in static export
+- Service worker: network-first for code, cache-first for assets
+- Activation gate: 6-digit code verified against server-side PHP on cPanel
+
+## Adaptive Mastery System
+- 5 difficulty levels per letter
+- Session state in sessionStorage, mastery in IndexedDB
+- "Smart Practice" selects letters needing work
+
+## Known Issues / TODOs
+- **iOS PWA speech:** SOLVED — `speechSynthesis` is dead in standalone mode, replaced
+  with pre-generated audio. See VOICE.md. Every game screen needs a tap gate:
+  navigation destroys the AudioContext and `resume()` defers rather than failing.
+- Next.js `<Link>`/`router.push` RSC navigation broken in static exports — use plain `<a>` tags
+- Service worker: `cache.put` crashes on HEAD requests — filter to GET only
 
 ## Notes
-Global `~/.claude/CLAUDE.md` provides rhino-os methodology (measurement, learning loop, commands).
-This file is project-specific — value hypothesis, features, and constraints for this codebase.
+- Dev port is 3001 (BitHustle uses 3000)
+- Audio unlock: AudioGate shows itself when a locked speak() is attempted
+- Voice corpus: `node scripts/generate-audio.mjs` (needs ELEVENLABS_API_KEY)
+- Celebration system: front-loaded frequency curve, personalized with child photos
+- Speed control: Relaxed/Normal/Quick modes
