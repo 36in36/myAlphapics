@@ -91,6 +91,9 @@ export function shouldCelebrate(
  * Fill in the child's name in a celebration phrase.
  */
 export function personalize(phrase: string, childName: string): string {
-  const name = childName || 'superstar';
-  return phrase.replace(/NAME/g, name);
+  const name = childName || 'friend';
+  const filled = phrase.replace(/NAME/g, name);
+  // NAME is sentence-initial in several templates, so the fallback would read
+  // "friend, you completed everything!". Capitalising is a no-op for real names.
+  return filled.charAt(0).toUpperCase() + filled.slice(1);
 }

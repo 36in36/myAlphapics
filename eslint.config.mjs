@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone iOS audio diagnostic — plain browser JS, not app code.
+    "tools/**",
   ]),
 ]);
 

@@ -46,3 +46,6 @@ next-env.d.ts
 .claude/cache/
 .claude/plans/
 .claude/scores/
+
+# rhino-os session logs — noise, not project state
+.claude/sessions/*.yml

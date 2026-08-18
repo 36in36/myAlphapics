@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import AudioGate from './components/AudioGate';
 
 export const metadata: Metadata = {
   title: 'MyAlphaPics - Learn ABCs!',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-gradient-to-b from-sky-100 via-blue-50 to-purple-100">
         {children}
+        <AudioGate />
       </body>
     </html>
   );

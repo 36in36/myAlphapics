@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { db, initDB, getSettings, recordProgress, type Letter } from '@/lib/db';
-import { speak } from '@/lib/tts';
+import { speak } from '@/lib/audio';
 import { playCheer } from '@/lib/sounds';
 import { requestWakeLock, releaseWakeLock } from '@/lib/wakelock';
 import confetti from 'canvas-confetti';

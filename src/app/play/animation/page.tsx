@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db, initDB, getSettings, recordProgress, getGameState, saveGameState, type Letter } from '@/lib/db';
-import { speak } from '@/lib/tts';
+import { speak } from '@/lib/audio';
 import { playCheer } from '@/lib/sounds';
 import { requestWakeLock, releaseWakeLock } from '@/lib/wakelock';
 import GameSwitcher from '@/app/components/GameSwitcher';

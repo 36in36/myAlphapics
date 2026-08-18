@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import { speak } from '@/lib/tts';
+import { speak } from '@/lib/audio';
 import { playPop, playCheer } from '@/lib/sounds';
 
 export interface CelebrationProps {

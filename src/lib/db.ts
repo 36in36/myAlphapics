@@ -59,6 +59,13 @@ export interface Session {
   alphabetCompletions: number;
 }
 
+export interface AudioClip {
+  key: string;        // sha1 of the normalized phrase
+  text: string;       // kept for cache inspection / debugging
+  blob: Blob;
+  created: number;
+}
+
 export interface GameState {
   gameId: string;
   lastLetterIndex: number;
@@ -74,6 +81,7 @@ class MyAlphaPicsDB extends Dexie {
   gameState!: Table<GameState>;
   letterMastery!: Table<LetterMastery>;
   interactionSessions!: Table<InteractionSession>;
+  audioCache!: Table<AudioClip>;
 
   constructor() {
     super('MyAlphaPicsDB');
@@ -98,6 +106,16 @@ class MyAlphaPicsDB extends Dexie {
       gameState: 'gameId',
       letterMastery: '++id, [childName+letter]',
       interactionSessions: '++id, childName, sessionDate',
+    });
+    this.version(4).stores({
+      letters: '++id, letter',
+      settings: '++id',
+      progress: '++id, [childName+letter]',
+      sessions: '++id, childName',
+      gameState: 'gameId',
+      letterMastery: '++id, [childName+letter]',
+      interactionSessions: '++id, childName, sessionDate',
+      audioCache: 'key',
     });
   }
 }
@@ -366,4 +384,17 @@ export async function selectFocusLetters(childName: string, count = 3): Promise<
 
   // Pick the top N letters that need the most practice
   return letterScores.slice(0, count).map(l => l.letter);
+}
+
+// ---- Audio clip cache -------------------------------------------------
+// Server-generated phrases (custom letter words, child name, word bank) are
+// stored here so they play offline forever after the first fetch.
+
+export async function getCachedAudio(key: string): Promise<Blob | null> {
+  const row = await db.audioCache.get(key);
+  return row ? row.blob : null;
+}
+
+export async function putCachedAudio(key: string, text: string, blob: Blob): Promise<void> {
+  await db.audioCache.put({ key, text, blob, created: Date.now() });
 }

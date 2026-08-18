@@ -1,0 +1,40 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AudioTest">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>1 · Baseline</title>
+<style>
+ body{font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#f0f9ff;color:#0f172a}
+ h1{font-size:20px;margin:0 0 4px}
+ p.sub{margin:0 0 16px;color:#475569;font-size:14px}
+ button{display:block;width:100%;padding:18px;margin:8px 0;font-size:18px;font-weight:600;
+        border:0;border-radius:12px;background:#3b82f6;color:#fff}
+ button.alt{background:#64748b}
+ nav{display:flex;gap:8px;margin:16px 0}
+ nav a{flex:1;text-align:center;padding:14px;background:#e2e8f0;border-radius:12px;
+       text-decoration:none;color:#0f172a;font-weight:600}
+ #log{background:#0f172a;color:#7dd3fc;font:11px/1.4 ui-monospace,monospace;
+      padding:10px;border-radius:10px;height:260px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+ .row{display:flex;gap:8px}.row button{flex:1;font-size:14px;padding:12px}
+</style>
+<h1>Page 1 — Baseline unlock</h1><p class="sub">Tap the button. This is the normal case: audio after a real user gesture.</p>
+<nav>
+  <a href="index.html">1</a><a href="page2.html">2</a><a href="page3.html">3</a>
+</nav>
+<button id="play">TAP: unlock + play</button><button class="alt" id="speech">TAP: test speechSynthesis</button>
+<button id="share">Share log → AirDrop</button>
+<div class="row">
+  <button class="alt" id="copy">Copy log</button>
+  <button class="alt" id="clear">Clear log</button>
+</div>
+<pre id="log"></pre>
+<script src="audio-test.js?v=2"></script>
+<script>
+const PAGE = 'P1';
+environment(); wireCommon();
+document.getElementById('play').onclick = () => playBuffer('letter','P1-gesture');
+document.getElementById('speech').onclick = () => testSpeech('P1-gesture');
+</script>

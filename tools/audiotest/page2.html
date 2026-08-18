@@ -1,0 +1,42 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AudioTest">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>2 · No gesture</title>
+<style>
+ body{font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#f0f9ff;color:#0f172a}
+ h1{font-size:20px;margin:0 0 4px}
+ p.sub{margin:0 0 16px;color:#475569;font-size:14px}
+ button{display:block;width:100%;padding:18px;margin:8px 0;font-size:18px;font-weight:600;
+        border:0;border-radius:12px;background:#3b82f6;color:#fff}
+ button.alt{background:#64748b}
+ nav{display:flex;gap:8px;margin:16px 0}
+ nav a{flex:1;text-align:center;padding:14px;background:#e2e8f0;border-radius:12px;
+       text-decoration:none;color:#0f172a;font-weight:600}
+ #log{background:#0f172a;color:#7dd3fc;font:11px/1.4 ui-monospace,monospace;
+      padding:10px;border-radius:10px;height:260px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+ .row{display:flex;gap:8px}.row button{flex:1;font-size:14px;padding:12px}
+</style>
+<h1>Page 2 — Autoplay, no gesture</h1><p class="sub">Arrived here via a plain link (full page load). Tries to play immediately with NO tap — this mimics your games auto-speaking a greeting on mount.</p>
+<nav>
+  <a href="index.html">1</a><a href="page2.html">2</a><a href="page3.html">3</a>
+</nav>
+<button id="play">TAP: play (after the auto attempt failed)</button>
+<button id="share">Share log → AirDrop</button>
+<div class="row">
+  <button class="alt" id="copy">Copy log</button>
+  <button class="alt" id="clear">Clear log</button>
+</div>
+<pre id="log"></pre>
+<script src="audio-test.js?v=2"></script>
+<script>
+const PAGE = 'P2';
+environment(); wireCommon();
+log('attempting autoplay with NO user gesture...');
+playBuffer('praise','P2-nogesture');
+setTimeout(()=>testSpeech('P2-nogesture'), 3000);
+document.getElementById('play').onclick = () => playBuffer('praise','P2-gesture');
+</script>
