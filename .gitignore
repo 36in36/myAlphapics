@@ -39,13 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.claude/rules/
-.claude/commands/
-.claude/settings.json
-.claude/knowledge/
-.claude/cache/
-.claude/plans/
-.claude/scores/
-
-# rhino-os session logs — noise, not project state
-.claude/sessions/*.yml
