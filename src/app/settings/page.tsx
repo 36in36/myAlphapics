@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { initDB, getSettings, saveSettings } from '@/lib/db';
+import { prefetchPhrases } from '@/lib/audio';
+import { namePhrases, wordBankPhrases } from '@/lib/phrases';
 
 const MAX_PHOTOS = 5;
 
@@ -12,6 +14,7 @@ export default function SettingsPage() {
   const [gameSpeed, setGameSpeed] = useState(1.0);
   const [photos, setPhotos] = useState<{ blob: Blob; url: string }[]>([]);
   const [saved, setSaved] = useState(false);
+  const [voiceProgress, setVoiceProgress] = useState<{ done: number; total: number } | null>(null);
   const [words, setWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
   const router = useRouter();
@@ -81,6 +84,20 @@ export default function SettingsPage() {
 
   async function handleSave() {
     await saveSettings({ childName, gameSpeed, wordBank: words });
+
+    // Generate the phrases that embed this name / these words now, while the
+    // parent is here and online — otherwise the first play of each stalls
+    // mid-game, or is silent offline.
+    const phrases = [
+      ...namePhrases(childName),
+      ...words.flatMap((w) => wordBankPhrases(w)),
+    ];
+    if (phrases.length > 0) {
+      setVoiceProgress({ done: 0, total: phrases.length });
+      await prefetchPhrases(phrases, (done, total) => setVoiceProgress({ done, total }));
+      setVoiceProgress(null);
+    }
+
     setSaved(true);
     setTimeout(() => router.push('/'), 1200);
   }
@@ -241,8 +258,10 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <button onClick={handleSave} className="btn-kid bg-green-500 w-full">
-        {saved ? '✅ Saved!' : '💾 Save Settings'}
+      <button onClick={handleSave} disabled={voiceProgress !== null} className="btn-kid bg-green-500 w-full disabled:opacity-70">
+        {voiceProgress
+          ? `🔊 Preparing voice… ${voiceProgress.done}/${voiceProgress.total}`
+          : saved ? '✅ Saved!' : '💾 Save Settings'}
       </button>
     </div>
   );

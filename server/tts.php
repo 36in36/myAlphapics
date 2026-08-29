@@ -147,11 +147,26 @@ curl_setopt_array($ch, [
         ],
     ]),
 ]);
-$audio  = curl_exec($ch);
-$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$audio    = curl_exec($ch);
+$status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlErr  = curl_error($ch);
 curl_close($ch);
 
-if ($status !== 200 || !$audio || strlen($audio) < 512) fail(502, 'upstream_failed');
+// Distinguish the failure modes: a rejected key (HTTP 401/403 with a body)
+// looks nothing like a blocked outbound connection (status 0, curl error),
+// but both used to surface as a bare 'upstream_failed'.
+if ($status !== 200 || !$audio || strlen($audio) < 512) {
+    http_response_code(502);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error'          => 'upstream_failed',
+        'upstream_status'=> $status,
+        'curl_error'     => $curlErr,
+        // ElevenLabs error bodies are JSON and contain no secrets.
+        'upstream_body'  => is_string($audio) ? substr($audio, 0, 300) : null,
+    ]);
+    exit;
+}
 
 @file_put_contents($file, $audio);   // shared across every family, generated once
 

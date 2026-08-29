@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { db, initDB, type Letter } from '@/lib/db';
+import { prefetchPhrases } from '@/lib/audio';
+import { letterWordPhrases } from '@/lib/phrases';
 
 function resizeImage(file: File, maxDim: number): Promise<Blob> {
   return new Promise((resolve) => {
@@ -36,6 +38,7 @@ export default function ManagePage() {
   const [editWord, setEditWord] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
+  const [preparing, setPreparing] = useState(false);
 
   useEffect(() => {
     initDB().then(loadLetters);
@@ -69,6 +72,17 @@ export default function ManagePage() {
       updates.imagePath = '__custom__';
     }
     await db.letters.update(editing.id, updates);
+
+    // "G is for Grandma" is parent-authored, so it cannot be pre-bundled.
+    // Generate it now rather than stalling mid-game on first play. The photo
+    // is already saved above — audio never blocks the save.
+    const phrases = letterWordPhrases(editing.letter, editWord);
+    if (phrases.length > 0) {
+      setPreparing(true);
+      await prefetchPhrases(phrases);
+      setPreparing(false);
+    }
+
     setEditing(null);
     setPreviewUrl(null);
     setPendingBlob(null);
@@ -127,7 +141,7 @@ export default function ManagePage() {
               />
             </label>
             <div className="flex gap-3">
-              <button onClick={saveEdit} className="btn-kid bg-green-500 flex-1 text-lg py-3">
+              <button onClick={saveEdit} disabled={preparing} className="btn-kid bg-green-500 flex-1 text-lg py-3 disabled:opacity-70">
                 ✅ Save
               </button>
               <button onClick={() => { setEditing(null); setPreviewUrl(null); }} className="btn-kid bg-gray-400 flex-1 text-lg py-3">

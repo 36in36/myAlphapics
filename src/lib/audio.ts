@@ -140,6 +140,44 @@ async function getBuffer(phrase: string): Promise<AudioBuffer | null> {
  * Resolves when playback finishes, so existing `await speak(...)` sequences
  * keep their pacing.
  */
+/**
+ * Generate and cache phrases ahead of play.
+ *
+ * Called when a parent saves a child's name, a custom letter word, or a
+ * word-bank entry — moments that have network and patience. Without this the
+ * first play of each phrase stalls mid-game waiting on the server, or is
+ * silent offline.
+ *
+ * Deliberately independent of the AudioContext: Settings has no tap gate, and
+ * this only fetches bytes into IndexedDB. Sequential by design, to avoid
+ * hammering the endpoint.
+ */
+export async function prefetchPhrases(
+  texts: string[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ cached: number; fetched: number; failed: number }> {
+  const list = Array.from(new Set(texts.map(normalize))).filter(Boolean);
+  let cached = 0, fetched = 0, failed = 0;
+
+  for (let i = 0; i < list.length; i++) {
+    const phrase = list[i];
+    try {
+      const key = await audioKey(phrase);
+      if (BUNDLED.has(key) || (await getCachedAudio(key))) {
+        cached++;                                   // already available offline
+      } else if (await fetchFromServer(phrase, key)) {
+        fetched++;                                  // fetchFromServer writes to IndexedDB
+      } else {
+        failed++;
+      }
+    } catch {
+      failed++;
+    }
+    onProgress?.(i + 1, list.length);
+  }
+  return { cached, fetched, failed };
+}
+
 export async function speak(text: string): Promise<void> {
   if (typeof window === 'undefined') return;
   const phrase = normalize(text);
