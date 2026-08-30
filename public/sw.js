@@ -53,6 +53,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // The build stamp is never cached. It exists to answer "which build is on
+  // this device?", and a cached answer to that question is worse than none.
+  if (url.pathname === '/version.json') return;
+
   // Static assets (images, sounds, speech clips, manifest) — cache first
   if (url.pathname.match(/\.(png|jpg|jpeg|webp|mp3|wav|json)$/) && !url.pathname.includes('_next')) {
     event.respondWith(

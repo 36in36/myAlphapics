@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { APP_VERSION, VERSION_NAME, fetchBuildInfo, formatBuiltAt, type BuildInfo } from '@/lib/version';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { initDB, getSettings, saveSettings } from '@/lib/db';
@@ -8,6 +9,57 @@ import { prefetchPhrases } from '@/lib/audio';
 import { namePhrases, wordBankPhrases } from '@/lib/phrases';
 
 const MAX_PHOTOS = 5;
+
+function BuildStamp() {
+  const [info, setInfo] = useState<BuildInfo | null>(null);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    fetchBuildInfo().then((i) => { setInfo(i); setChecked(true); });
+  }, []);
+
+  return (
+    <div className="bg-white/60 rounded-2xl p-4 mb-4">
+      <h2 className="text-xl font-bold text-gray-500 mb-2">ℹ️ About this app</h2>
+      <dl className="text-sm text-gray-500 space-y-1">
+        <div className="flex justify-between">
+          <dt>Version</dt>
+          <dd className="font-mono font-bold text-gray-700">
+            {APP_VERSION} &ldquo;{VERSION_NAME}&rdquo;
+          </dd>
+        </div>
+        {info && (
+          <>
+            <div className="flex justify-between">
+              <dt>Build</dt>
+              <dd className="font-mono text-gray-700">{info.buildId}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Deployed</dt>
+              <dd className="text-gray-700">{formatBuiltAt(info.builtAt)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Voice clips</dt>
+              <dd className={info.audioClips === 0 ? 'font-bold text-red-500' : 'text-gray-700'}>
+                {info.audioClips === 0 ? 'none generated' : info.audioClips}
+              </dd>
+            </div>
+          </>
+        )}
+        {checked && !info && (
+          <p className="text-xs text-orange-500">
+            Couldn&apos;t read the build stamp — this is an older build, or it was
+            deployed without one.
+          </p>
+        )}
+      </dl>
+      <p className="text-xs text-gray-400 mt-3">
+        If this doesn&apos;t match what you just deployed, the app is running from cache.
+        Close every tab and reopen, or reinstall from the browser.
+      </p>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const [childName, setChildName] = useState('');
@@ -257,6 +309,8 @@ export default function SettingsPage() {
           </p>
         )}
       </div>
+
+      <BuildStamp />
 
       <button onClick={handleSave} disabled={voiceProgress !== null} className="btn-kid bg-green-500 w-full disabled:opacity-70">
         {voiceProgress

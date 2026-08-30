@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Stamped by scripts/stamp-version.mjs on every dev/build run.
+/public/version.json

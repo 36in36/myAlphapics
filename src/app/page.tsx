@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { initDB, getSettings, isActivated } from '@/lib/db';
+import { APP_VERSION } from '@/lib/version';
 import ActivationGate from '@/app/components/ActivationGate';
 import IOSInstallBanner from '@/app/components/IOSInstallBanner';
 
@@ -74,6 +75,10 @@ export default function Home() {
           📊 Reports
         </a>
       </div>
+
+      <a href="/settings/" className="text-xs text-gray-400 hover:text-gray-500">
+        v{APP_VERSION}
+      </a>
     </div>
   );
 }
