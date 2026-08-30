@@ -34,27 +34,41 @@ export default function Celebration({
     if (didRunRef.current) return;
     didRunRef.current = true;
 
-    const duration = durationMs ?? (type === 'full' ? 4000 : 2500);
+    // Minimum time the celebration stays on screen. The real length is however
+    // long the sound + phrase actually take, which is usually longer.
+    const minDuration = durationMs ?? (type === 'full' ? 4000 : 2500);
+    const startedAt = Date.now();
+    let cancelled = false;
+    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-    if (type === 'full') {
-      playCheer();
-      // Big confetti burst
-      confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
-      setTimeout(() => {
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.3, x: 0.3 } });
-      }, 300);
-      setTimeout(() => {
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.3, x: 0.7 } });
-      }, 600);
-    } else {
-      playPop();
-      confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
-    }
+    (async () => {
+      // Sound and phrase are sequenced, not simultaneous. Previously both
+      // started at once and the 7s cheer ran on over the following letters.
+      if (type === 'full') {
+        confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+        setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { y: 0.3, x: 0.3 } }), 300);
+        setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { y: 0.3, x: 0.7 } }), 600);
+        await playCheer();
+      } else {
+        confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
+        await playPop();
+      }
+      if (cancelled) return;
 
-    speak(phrase);
+      // Awaited, so the next letter can no longer cut the phrase off mid-word:
+      // speak() cancels whatever is currently playing when it starts.
+      await speak(phrase);
+      if (cancelled) return;
 
-    const timer = setTimeout(onComplete, duration);
-    return () => clearTimeout(timer);
+      await wait(600);                       // a beat before moving on
+      if (cancelled) return;
+
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minDuration) await wait(minDuration - elapsed);
+      if (!cancelled) onComplete();
+    })();
+
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

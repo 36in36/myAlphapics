@@ -39,6 +39,9 @@ const FINAL_PHRASES = [
   "NAME, you completed everything! That's incredible!",
 ];
 
+/** Minimum letters between full (cheering) celebrations. */
+export const FULL_CELEBRATION_GAP = 8;
+
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -49,12 +52,14 @@ function pickRandom<T>(arr: T[]): T {
  * @param letterIndex - 0-based index of the letter just completed
  * @param totalLetters - total letters in this session/game
  * @param lettersSinceLast - how many letters since last celebration
+ * @param lettersSinceFull - letters since the last full celebration; drives cheer spacing
  * @returns CelebrationCheck with type and phrase
  */
 export function shouldCelebrate(
   letterIndex: number,
   totalLetters: number,
-  lettersSinceLast: number
+  lettersSinceLast: number,
+  lettersSinceFull = 0
 ): CelebrationCheck {
   const letterNumber = letterIndex + 1; // 1-based
   const isLast = letterNumber === totalLetters;
@@ -81,6 +86,14 @@ export function shouldCelebrate(
   }
 
   if (lettersSinceLast >= threshold) {
+    // Cheering used to land only at the halfway and final letters, so a short
+    // session never reached it. Promote a celebration to 'full' once enough
+    // letters have passed since the last cheer — spacing by letters rather
+    // than by celebration count keeps the gaps even as the mini cadence thins
+    // out, and avoids a cheer landing right next to the finale.
+    if (lettersSinceFull >= FULL_CELEBRATION_GAP && letterNumber < totalLetters - 2) {
+      return { type: 'full', phrase: pickRandom(FULL_PHRASES) };
+    }
     return { type: 'mini', phrase: pickRandom(MINI_PHRASES) };
   }
 

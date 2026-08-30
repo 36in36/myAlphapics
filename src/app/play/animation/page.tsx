@@ -36,6 +36,7 @@ function AnimationGame() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [childName, setChildName] = useState('');
   const [lettersSinceCelebration, setLettersSinceCelebration] = useState(0);
+  const [lettersSinceFull, setLettersSinceFull] = useState(0);
   const [animScale, setAnimScale] = useState(0);
   const cancelledRef = useRef(false);
   const startedRef = useRef(false);
@@ -135,11 +136,13 @@ function AnimationGame() {
 
     const newCelebCount = celebCount + 1;
     const letterIdx = letters.indexOf(letter);
-    const celebration = shouldCelebrate(letterIdx, letters.length, newCelebCount);
+    const newSinceFull = lettersSinceFull + 1;
+    const celebration = shouldCelebrate(letterIdx, letters.length, newCelebCount, newSinceFull);
 
     if (celebration.type !== 'none') {
       setCelebrationPhoto(getRandomPhoto());
       setCelebrationData(celebration);
+      setLettersSinceFull(celebration.type === 'full' ? 0 : newSinceFull);
       setPhase('celebrate');
       setLettersSinceCelebration(0);
       // Celebration component handles timing via onComplete
@@ -147,6 +150,7 @@ function AnimationGame() {
     }
 
     setLettersSinceCelebration(newCelebCount);
+    setLettersSinceFull(newSinceFull);
     const nextIdx = (letterIdx + 1) % letters.length;
     if (adaptiveRef.current && nextIdx === 0) {
       router.push('/play/adaptive');

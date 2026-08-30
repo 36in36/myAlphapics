@@ -16,7 +16,7 @@
 
 declare(strict_types=1);
 
-const API_KEY   = ''; // leave empty to read ELEVENLABS_API_KEY from the environment
+const API_KEY   = ''; // prefer tts-key.txt beside this file — see elevenlabs_key()
 const VOICE_ID  = 'cgSgspJ2msm6clMCkdW9';
 const MODEL_ID  = 'eleven_multilingual_v2';
 const FORMAT    = 'mp3_44100_64';   // must match scripts/generate-audio.mjs
@@ -129,7 +129,26 @@ if (is_file($file) && filesize($file) > 512) {
     exit;
 }
 
-$apiKey = API_KEY !== '' ? API_KEY : (getenv('ELEVENLABS_API_KEY') ?: '');
+/**
+ * Key lookup, in order:
+ *   1. the API_KEY constant above
+ *   2. tts-key.txt sitting beside this file  <-- recommended
+ *   3. the ELEVENLABS_API_KEY environment variable
+ *
+ * Option 2 survives re-uploading tts.php, which option 1 does not. Create it
+ * once containing only the key, and keep it out of any deploy that overwrites.
+ */
+function elevenlabs_key(): string {
+    if (API_KEY !== '') return API_KEY;
+    $file = __DIR__ . '/tts-key.txt';
+    if (is_file($file)) {
+        $k = trim((string)file_get_contents($file));
+        if ($k !== '') return $k;
+    }
+    return (string)(getenv('ELEVENLABS_API_KEY') ?: '');
+}
+
+$apiKey = elevenlabs_key();
 if ($apiKey === '') fail(500, 'no_api_key');
 
 $ch = curl_init('https://api.elevenlabs.io/v1/text-to-speech/' . VOICE_ID . '?output_format=' . FORMAT);

@@ -31,6 +31,7 @@ function Choose4Game() {
   const [celebrationPhoto, setCelebrationPhoto] = useState<string | null>(null);
   const [celebrationData, setCelebrationData] = useState<CelebrationCheck | null>(null);
   const [lettersSinceCelebration, setLettersSinceCelebration] = useState(0);
+  const [lettersSinceFull, setLettersSinceFull] = useState(0);
   const [letters, setLetters] = useState<Letter[]>([]);
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('loading');
@@ -239,11 +240,13 @@ function Choose4Game() {
       await recordLetterAttempt(childName, current.letter, true, responseTime, 'choose4');
 
       const newSinceLast = lettersSinceCelebration + 1;
-      const celebration = shouldCelebrate(index, letters.length, newSinceLast);
+      const newSinceFull = lettersSinceFull + 1;
+      const celebration = shouldCelebrate(index, letters.length, newSinceLast, newSinceFull);
 
       if (celebration.type !== 'none') {
         setCelebrationPhoto(getRandomPhoto());
         setCelebrationData(celebration);
+      setLettersSinceFull(celebration.type === 'full' ? 0 : newSinceFull);
         setLettersSinceCelebration(0);
         setPhase('celebrate');
         return;
@@ -256,6 +259,7 @@ function Choose4Game() {
       if (cancelledRef.current) return;
 
       setLettersSinceCelebration(newSinceLast);
+      setLettersSinceFull(newSinceFull);
       advanceToNextChoose4();
     } else {
       setPhase('wrong');

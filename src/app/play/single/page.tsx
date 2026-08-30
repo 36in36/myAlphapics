@@ -31,6 +31,7 @@ function SingleLetterGame() {
   const [celebrationPhoto, setCelebrationPhoto] = useState<string | null>(null);
   const [celebrationData, setCelebrationData] = useState<CelebrationCheck | null>(null);
   const [lettersSinceCelebration, setLettersSinceCelebration] = useState(0);
+  const [lettersSinceFull, setLettersSinceFull] = useState(0);
   const [introPhotos, setIntroPhotos] = useState<string[]>([]);
   const [introPhotoIndex, setIntroPhotoIndex] = useState(0);
   const startedRef = useRef(false);
@@ -199,11 +200,13 @@ function SingleLetterGame() {
     await recordLetterAttempt(childName, current.letter, true, responseTime, 'single');
 
     const newSinceLast = lettersSinceCelebration + 1;
-    const celebration = shouldCelebrate(index, letters.length, newSinceLast);
+    const newSinceFull = lettersSinceFull + 1;
+    const celebration = shouldCelebrate(index, letters.length, newSinceLast, newSinceFull);
 
     if (celebration.type !== 'none') {
       setCelebrationPhoto(getRandomPhoto());
       setCelebrationData(celebration);
+      setLettersSinceFull(celebration.type === 'full' ? 0 : newSinceFull);
       setLettersSinceCelebration(0);
       setPhase('celebrate');
       return;
@@ -217,6 +220,7 @@ function SingleLetterGame() {
     if (cancelledRef.current) return;
 
     setLettersSinceCelebration(newSinceLast);
+    setLettersSinceFull(newSinceFull);
     advanceToNext();
   }
 
