@@ -7,6 +7,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/stamp-version.mjs",
     "build": "next build",
+    "deploy": "npm run build && node scripts/deploy.mjs",
     "start": "next start",
     "lint": "eslint"
   },

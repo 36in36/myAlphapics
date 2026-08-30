@@ -34,6 +34,30 @@ certbot --nginx -d app.myalphapics.com
 
 ```powershell
 cd C:\projects\myalphapics-web
+npm run deploy
+```
+
+That builds, copies `out/` to the droplet, then reads
+`https://app.myalphapics.com/version.json` back and checks the build id matches
+what was just built. It either says "Deploy confirmed" or tells you what it
+found instead — no more guessing whether the browser is showing the new build
+or a cached old one.
+
+`node scripts/deploy.mjs --dry` prints the scp command without running it.
+`--no-verify` skips the check.
+
+The long way, if you'd rather do it by hand:
+
+```powershell
 npm run build
 scp -r out/* root@167.71.91.81:/var/www/myalphapics/
 ```
+
+Note that `npm run build` alone changes nothing on the server — it only writes
+the `out/` folder locally. The copy is what makes the site change.
+
+## Checking what's deployed
+
+`https://app.myalphapics.com/version.json` reports the running version, git
+SHA, build time, service worker cache name, and bundled voice clip count.
+Stamped automatically by `scripts/stamp-version.mjs` on every build.
