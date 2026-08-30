@@ -45,6 +45,10 @@ const FINAL_PHRASES = [
  * finished all the letters. Everything here that is already subject-neutral is
  * the same string as its letters counterpart on purpose — same sha1, same
  * bundled clip, nothing extra to generate.
+ *
+ * The replacements are also worded to match the praise patterns already
+ * whitelisted in server/tts.php, so a child whose name is set still hears them
+ * without a cPanel change. Check that file before adding another.
  */
 const NUMBER_FULL_PHRASES = [
   "Wow NAME, you're amazing! Look how far you've come!",
@@ -54,7 +58,7 @@ const NUMBER_FULL_PHRASES = [
 ];
 
 const NUMBER_FINAL_PHRASES = [
-  "You did it, NAME! You counted every one! Amazing!",
+  "Wow NAME! You counted every one! Amazing!",
   "Congratulations NAME! You're a counting superstar!",
   "NAME, you completed everything! That's incredible!",
 ];

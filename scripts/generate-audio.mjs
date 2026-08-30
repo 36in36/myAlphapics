@@ -130,7 +130,7 @@ function corpus() {
     // The counting games swap out the three phrases that name the alphabet.
     // Mirrors NUMBER_FULL_PHRASES / NUMBER_FINAL_PHRASES in celebrationSchedule.ts.
     "Incredible work NAME! You're becoming a counting star!",
-    'You did it, NAME! You counted every one! Amazing!',
+    'Wow NAME! You counted every one! Amazing!',
     "Congratulations NAME! You're a counting superstar!",
   ];
   // Must mirror personalize() in src/lib/celebrationSchedule.ts exactly.

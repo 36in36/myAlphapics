@@ -196,6 +196,13 @@ counting-flavoured replacements for exactly those three. Every other praise
 phrase is deliberately the same string in both sets — same sha1, same clip,
 nothing extra to generate.
 
+The three replacements are worded to match praise patterns `server/tts.php`
+already whitelists, so a child whose name is set hears them without a cPanel
+change. That is a real constraint, not a coincidence: the letters phrase
+"You did it, NAME! You finished all the letters!" has its own exact-match rule
+in that file, so the counting equivalent had to start "Wow NAME!" instead.
+Check tts.php before adding any further praise.
+
 Canonical text lives in `src/lib/countingPhrases.ts` and is **mirrored** by
 `countingCorpus()` in `scripts/generate-audio.mjs`, the same convention the
 letter phrases already use. Change one, change both, then re-run the generator.
