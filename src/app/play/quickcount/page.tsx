@@ -143,7 +143,7 @@ function QuickCount() {
 
     const newSince = sinceCelebration + 1;
     const newSinceFull = sinceFull + 1;
-    const celebration = shouldCelebrate(round, ROUNDS, newSince, newSinceFull);
+    const celebration = shouldCelebrate(round, ROUNDS, newSince, newSinceFull, 'numbers');
     if (celebration.type !== 'none' && round < ROUNDS - 1) {
       setCelebrationPhoto(getRandomPhoto());
       setCelebrationData(celebration);

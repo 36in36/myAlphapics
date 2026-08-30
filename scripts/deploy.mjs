@@ -35,7 +35,7 @@ try {
   if (stamp.buildId.endsWith('-dirty')) {
     console.log('  note: built from a tree with uncommitted changes');
   }
-  if (stamp.audioClips < 262) {
+  if (stamp.audioClips < 265) {
     console.log(`  note: only ${stamp.audioClips} voice clips — run scripts/generate-audio.mjs for the full corpus`);
   }
 } catch {

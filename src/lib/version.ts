@@ -6,7 +6,7 @@
  * public/version.json by scripts/stamp-version.mjs, which npm runs
  * automatically before `next build`.
  */
-export const APP_VERSION = '1.1.2';
+export const APP_VERSION = '1.1.3';
 export const VERSION_NAME = 'Numbers';
 
 export interface BuildInfo {

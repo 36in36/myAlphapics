@@ -156,7 +156,7 @@ function FindNumber() {
     if (correct) {
       const newSince = sinceCelebration + 1;
       const newSinceFull = sinceFull + 1;
-      const celebration = shouldCelebrate(index, numbers.length, newSince, newSinceFull);
+      const celebration = shouldCelebrate(index, numbers.length, newSince, newSinceFull, 'numbers');
 
       if (celebration.type !== 'none') {
         setCelebrationPhoto(getRandomPhoto());

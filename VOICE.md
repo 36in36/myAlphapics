@@ -185,6 +185,17 @@ and `server/tts.php` needs no new whitelist pattern — the one personalized lin
 | `You pressed the number N!` | 10 |
 | Prompts, level announcements | 15 |
 
+### Counting praise — added 2026-08-30
+
+Three more clips, bringing the corpus to **265**. The shared celebration
+phrases include three that name the alphabet ("...becoming an alphabet
+expert", "...finished all the letters", "...an alphabet superstar"), which is
+wrong after counting photos. `celebrationSchedule.ts` now takes a
+`subject` argument and the counting games pass `'numbers'`, drawing on
+counting-flavoured replacements for exactly those three. Every other praise
+phrase is deliberately the same string in both sets — same sha1, same clip,
+nothing extra to generate.
+
 Canonical text lives in `src/lib/countingPhrases.ts` and is **mirrored** by
 `countingCorpus()` in `scripts/generate-audio.mjs`, the same convention the
 letter phrases already use. Change one, change both, then re-run the generator.
@@ -195,7 +206,7 @@ letter phrases already use. Change one, change both, then re-run the generator.
 ELEVENLABS_API_KEY=... node scripts/generate-audio.mjs
 ```
 
-Idempotent — it skips the 188 existing clips and writes only the 74 new ones,
+Idempotent — it skips clips already on disk and writes only what is missing,
 then regenerates `src/lib/audioManifest.ts`. Until that runs, the Numbers modes
 play silently: `speak()` finds no bundled key, the server rejects the phrase,
 and the game continues without audio rather than failing.

@@ -154,7 +154,7 @@ function CountPhoto() {
 
       const newSince = sinceCelebration + 1;
       const newSinceFull = sinceFull + 1;
-      const celebration = shouldCelebrate(index, scenes.length, newSince, newSinceFull);
+      const celebration = shouldCelebrate(index, scenes.length, newSince, newSinceFull, 'numbers');
       if (celebration.type !== 'none') {
         setCelebrationPhoto(getRandomPhoto());
         setCelebrationData(celebration);
