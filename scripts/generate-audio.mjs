@@ -33,6 +33,59 @@ const LETTERS = [
 
 const LEVELS = ['Watch & Learn','Press the Letter','Choose Between 2','Choose Between 3','Choose Between 4'];
 
+/* Mirrors src/lib/countingPhrases.ts exactly — a single character of drift
+   changes the sha1 and the Numbers modes go silent. */
+const NUMBER_WORDS = ['', 'one','two','three','four','five','six','seven','eight','nine','ten'];
+const MAX_NUMBER = 10;
+const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+
+const countBeat      = (n) => `${cap(NUMBER_WORDS[n])}.`;
+const cardinalRecap  = (n) => n === 1
+  ? 'One! There is one.'
+  : `${cap(NUMBER_WORDS[n])}! There are ${NUMBER_WORDS[n]}.`;
+const countSequence  = (n) => `${cap(NUMBER_WORDS.slice(1, n + 1).join(', '))}.`;
+const numberIntro    = (n) => `This is the number ${NUMBER_WORDS[n]}`;
+const findNumber     = (n) => `Can you find the number ${NUMBER_WORDS[n]}?`;
+const pressedNumber  = (n) => `You pressed the number ${NUMBER_WORDS[n]}!`;
+
+const COUNT_PROMPTS = [
+  'Watch me count!',
+  "Let's count!",
+  'Tap each one to count.',
+  'Now you try!',
+  'How many?',
+  'How many are there?',
+  'Look fast! How many?',
+  'Can you count them in the picture?',
+  "Hi! Let's count!",
+  "That's correct!",
+  "That's not quite right. Let's try again!",
+  'Congratulations! You counted them all! You are amazing!',
+  "Great counting! Let's keep going!",
+];
+
+const NUMBER_LEVEL_ANNOUNCE = [
+  'Level: Count With Me!',
+  'Level: Count Along!',
+  'Level: How Many?!',
+  'Level: Find the Number!',
+];
+
+function countingCorpus() {
+  const out = [];
+  for (let n = 1; n <= MAX_NUMBER; n++) {
+    out.push(countBeat(n));
+    out.push(cardinalRecap(n));
+    out.push(countSequence(n));
+    out.push(numberIntro(n));
+    out.push(findNumber(n));
+    out.push(pressedNumber(n));
+  }
+  out.push(...COUNT_PROMPTS);
+  out.push(...NUMBER_LEVEL_ANNOUNCE);
+  return out;
+}
+
 function corpus() {
   const out = [];
   for (const [L, word] of LETTERS) {
@@ -83,7 +136,13 @@ function corpus() {
   for (const t of PRAISE) out.push(personalize(t));
 
   out.push("Amazing work! You completed all five levels! You're getting so smart!");
-  return out;
+
+  out.push(...countingCorpus());
+
+  // Duplicates across the letter and number corpora (shared praise and feedback)
+  // are harmless — generation is keyed by sha1 and skips what already exists —
+  // but de-duplicating keeps the --dry character count honest.
+  return Array.from(new Set(out));
 }
 
 const normalize = (t) => t.trim().replace(/\s+/g, ' ');

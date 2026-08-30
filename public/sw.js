@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myalphapics-v4';
+const CACHE_NAME = 'myalphapics-v5';
 const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/sounds/pop.mp3',

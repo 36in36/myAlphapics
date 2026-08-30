@@ -167,6 +167,51 @@ by the letter sequence. No console errors.
 `speak()` keeps its old signature, so all 9 call sites were a one-line import
 swap and the gate needed no per-page wiring.
 
+## Numbers corpus — added 2026-08-30
+
+The Numbers modes add **74 clips** to the bundled tier (262 phrases total, 188
+already generated). Every counting phrase is fixed text, so all of it is tier 1
+and `server/tts.php` needs no new whitelist pattern — the one personalized line,
+`Hi <name>! Let's count!`, already matches the existing
+`Hi .{1,30}! Let's .{1,40}` rule.
+
+| Group | Count |
+|---|---|
+| Count beats `One.` … `Ten.` | 10 |
+| Cardinality recaps `Three! There are three.` | 10 |
+| Whole sequences `One, two, three.` | 9 |
+| `This is the number N` | 10 |
+| `Can you find the number N?` | 10 |
+| `You pressed the number N!` | 10 |
+| Prompts, level announcements | 15 |
+
+Canonical text lives in `src/lib/countingPhrases.ts` and is **mirrored** by
+`countingCorpus()` in `scripts/generate-audio.mjs`, the same convention the
+letter phrases already use. Change one, change both, then re-run the generator.
+
+### To generate them
+
+```bash
+ELEVENLABS_API_KEY=... node scripts/generate-audio.mjs
+```
+
+Idempotent — it skips the 188 existing clips and writes only the 74 new ones,
+then regenerates `src/lib/audioManifest.ts`. Until that runs, the Numbers modes
+play silently: `speak()` finds no bundled key, the server rejects the phrase,
+and the game continues without audio rather than failing.
+
+`public/sw.js` is already bumped to `myalphapics-v5` so `warmAudioCache()`
+re-warms against the larger manifest on the next service worker activation.
+
+### Counting cadence
+
+Ten separately generated clips played back to back would sound like a list, not
+a count. The resolution is that **the child supplies the rhythm**: in tap-to-count
+each number sits on its own beat, separated by however long the child takes, so a
+flat evenly-stressed `One.` is correct there. The whole-sequence clips exist for
+Count With Me, where the app counts on its own and needs real prosody — full
+phrases, never spliced, same rule as the letter phrases.
+
 ## Outstanding
 
 - [ ] Rotate the ElevenLabs API key (`Merciless Maned Wolf` was exposed in a

@@ -47,6 +47,7 @@ src/
 ├── app/
 │   ├── components/     # Shared UI components
 │   ├── manage/         # Photo management per letter
+│   │   └── counting/   # Counting sets, count-to limit, Photo Count scenes
 │   ├── play/           # Game modes
 │   │   ├── abcsong/    # ABC Song mode
 │   │   ├── adaptive/   # Adaptive difficulty
@@ -71,6 +72,20 @@ src/
 - `trailingSlash: true` required for subdirectory pages in static export
 - Service worker: network-first for code, cache-first for assets
 - Activation gate: 6-digit code verified against server-side PHP on cPanel
+
+## Numbers Modes
+- Seven counting/number games plus their own Smart Practice ladder
+  (`src/lib/numbersSession.ts`, a sibling of `adaptiveSession.ts` so the letters
+  ladder is untouched).
+- The countable photo pool is **derived**, not authored: curated sets if any,
+  else letters with custom photos, else profile photos, else bundled clipart.
+  Parents add nothing to start counting. See `getCountingPool()` in `db.ts`.
+- Dexie v5 adds `numberMastery`, `countGroups`, `countItems`, `countScenes`.
+  Purely additive — no upgrade function, no data migration.
+- Game registry lives in `src/lib/games.ts`; the picker and `GameSwitcher` both
+  read it (they used to keep separate copies that drifted).
+- Audio: 74 new bundled clips. See VOICE.md — they must be generated before
+  these modes have sound.
 
 ## Adaptive Mastery System
 - 5 difficulty levels per letter

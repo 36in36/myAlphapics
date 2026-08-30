@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { initDB, getSettings, getComprehensiveReport, type Progress, type LetterMastery, type InteractionSession } from '@/lib/db';
+import { initDB, getSettings, getComprehensiveReport, getNumberMasteryData, getMaxCount, type Progress, type LetterMastery, type InteractionSession, type NumberMastery } from '@/lib/db';
 
-type Tab = 'exposure' | 'interaction' | 'mastery';
+type Tab = 'exposure' | 'interaction' | 'mastery' | 'numbers';
 
 interface ReportData {
   exposureData: Progress[];
@@ -46,15 +46,22 @@ export default function ReportsPage() {
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedLetter, setSelectedLetter] = useState<LetterMastery | null>(null);
+  const [numberData, setNumberData] = useState<NumberMastery[]>([]);
+  const [maxCount, setMaxCount] = useState(5);
 
   useEffect(() => {
     (async () => {
       try {
         await initDB();
         const settings = await getSettings();
+        setMaxCount(await getMaxCount());
         if (settings?.childName) {
-          const data = await getComprehensiveReport(settings.childName);
+          const [data, numbers] = await Promise.all([
+            getComprehensiveReport(settings.childName),
+            getNumberMasteryData(settings.childName),
+          ]);
           setReport(data);
+          setNumberData(numbers);
         }
       } catch (e) {
         console.error('Failed to load report:', e);
@@ -68,6 +75,7 @@ export default function ReportsPage() {
     { key: 'exposure', label: 'Exposure', emoji: '👀' },
     { key: 'interaction', label: 'Interaction', emoji: '🎯' },
     { key: 'mastery', label: 'Mastery', emoji: '⭐' },
+    { key: 'numbers', label: 'Numbers', emoji: '🔢' },
   ];
 
   if (loading) {
@@ -117,7 +125,7 @@ export default function ReportsPage() {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {!report ? (
+        {!report && activeTab !== 'numbers' ? (
           <div className="bg-white rounded-2xl p-8 text-center shadow-md">
             <p className="text-6xl mb-4">📭</p>
             <p className="text-xl font-bold text-gray-600">No data yet</p>
@@ -125,15 +133,16 @@ export default function ReportsPage() {
           </div>
         ) : (
           <>
-            {activeTab === 'exposure' && <ExposureTab data={report.exposureData} />}
-            {activeTab === 'interaction' && <InteractionTab report={report} />}
-            {activeTab === 'mastery' && (
+            {report && activeTab === 'exposure' && <ExposureTab data={report.exposureData} />}
+            {report && activeTab === 'interaction' && <InteractionTab report={report} />}
+            {report && activeTab === 'mastery' && (
               <MasteryTab
                 report={report}
                 selectedLetter={selectedLetter}
                 onSelectLetter={setSelectedLetter}
               />
             )}
+            {activeTab === 'numbers' && <NumbersTab data={numberData} maxCount={maxCount} />}
           </>
         )}
       </div>
@@ -430,6 +439,80 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
       <span className="text-gray-500 font-semibold">{label}</span>
       <span className="font-bold text-gray-800">{value}</span>
+    </div>
+  );
+}
+
+/* ─── Tab 4: Numbers ─── */
+function NumbersTab({ data, maxCount }: { data: NumberMastery[]; maxCount: number }) {
+  const all = Array.from({ length: maxCount }, (_, i) => i + 1);
+  const started = data.filter((m) => m.attempts > 0);
+  const mastered = data.filter((m) => m.masteryLevel >= 4);
+  const totalAttempts = data.reduce((s, m) => s + m.attempts, 0);
+  const totalCorrect = data.reduce((s, m) => s + m.correctAttempts, 0);
+  const accuracy = totalAttempts > 0 ? (totalCorrect / totalAttempts) * 100 : 0;
+
+  if (started.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-8 text-center shadow-md">
+        <p className="text-5xl mb-3">🔢</p>
+        <p className="text-lg font-bold text-gray-500">No counting yet</p>
+        <p className="text-gray-400 mt-1">
+          Try Count With Me — it works with the photos you already added.
+        </p>
+        <a href="/play/countwithme/" className="btn-kid bg-amber-500 inline-block mt-4 text-base">
+          👀 Start counting
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <StatCard emoji="🔢" label="Practised" value={`${started.length}/${maxCount}`} />
+        <StatCard emoji="⭐" label="Mastered" value={`${mastered.length}`} />
+        <StatCard emoji="🎯" label="Accuracy" value={`${Math.round(accuracy)}%`} />
+      </div>
+
+      <div className="bg-white rounded-2xl p-4 shadow-md">
+        <p className="text-sm text-gray-400 mb-3">
+          Counting to {maxCount}. Mastery here means picking the right number after counting a set —
+          not just saying the number words in order.
+        </p>
+        <div className="space-y-3">
+          {all.map((value) => {
+            const m = data.find((d) => d.number === value);
+            const level = m?.masteryLevel ?? 0;
+            const attempts = m?.attempts ?? 0;
+            const label = MASTERY_LEVELS[level] ?? MASTERY_LEVELS[0];
+
+            return (
+              <div key={value} className="flex items-center gap-3">
+                <span className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl font-black text-amber-700 flex-none">
+                  {value}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${label.color} ${label.text}`}>
+                      {label.label}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {attempts > 0 ? `${m!.correctAttempts}/${attempts} right` : 'not tried'}
+                    </span>
+                  </div>
+                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${level >= 4 ? 'bg-green-500' : 'bg-amber-500'}`}
+                      style={{ width: `${(level / 5) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

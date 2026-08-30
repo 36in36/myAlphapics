@@ -4,33 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { db, initDB, type Letter } from '@/lib/db';
 import { prefetchPhrases } from '@/lib/audio';
+import { resizeImage, LETTER_PHOTO_MAX } from '@/lib/image';
 import { letterWordPhrases } from '@/lib/phrases';
-
-function resizeImage(file: File, maxDim: number): Promise<Blob> {
-  return new Promise((resolve) => {
-    const img = document.createElement('img');
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = (height / width) * maxDim;
-          width = maxDim;
-        } else {
-          width = (width / height) * maxDim;
-          height = maxDim;
-        }
-      }
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => resolve(blob!), 'image/png');
-    };
-    img.src = url;
-  });
-}
 
 export default function ManagePage() {
   const [letters, setLetters] = useState<Letter[]>([]);
@@ -59,7 +34,7 @@ export default function ManagePage() {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const blob = await resizeImage(file, 400);
+    const blob = await resizeImage(file, LETTER_PHOTO_MAX);
     setPendingBlob(blob);
     setPreviewUrl(URL.createObjectURL(blob));
   }
@@ -108,6 +83,20 @@ export default function ManagePage() {
         <Link href="/" className="text-3xl">⬅️</Link>
         <h1 className="text-3xl font-extrabold text-blue-600">📸 Letter Management</h1>
       </div>
+
+      <a
+        href="/manage/counting/"
+        className="mb-5 flex items-center gap-3 rounded-2xl bg-orange-100 p-3 shadow-sm transition-transform hover:scale-[1.01] active:scale-95"
+      >
+        <span className="text-3xl">🔢</span>
+        <div className="flex-1">
+          <p className="font-extrabold text-orange-700">Counting Setup</p>
+          <p className="text-sm text-orange-600/70">
+            Counting already uses these photos. Tap to curate sets or set up Photo Count.
+          </p>
+        </div>
+        <span className="text-2xl text-orange-400">›</span>
+      </a>
 
       {editing && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
