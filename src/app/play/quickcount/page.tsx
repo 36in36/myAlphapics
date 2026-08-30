@@ -197,7 +197,7 @@ function QuickCount() {
         <p className="text-2xl font-bold text-gray-500">{correctCount} out of {ROUNDS}</p>
         <div className="flex gap-4">
           <button
-            onClick={() => { setRound(0); setCorrectCount(0); startedRef.current = false; runRound(); }}
+            onClick={() => { setRound(0); setCorrectCount(0); runRound(); }}
             className="btn-kid bg-green-500"
           >
             🔄 Play Again

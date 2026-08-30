@@ -39,6 +39,7 @@ function SingleLetterGame() {
   const adaptiveRef = useRef(false);
   const [letters, setLetters] = useState<Letter[]>([]);
   const [index, setIndex] = useState(0);
+  const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<Phase>('loading');
   const [completions, setCompletions] = useState(0);
   const [childName, setChildName] = useState('');
@@ -185,13 +186,17 @@ function SingleLetterGame() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [letters, profileUrls]);
 
-  // Advance to next letter (after first load, triggered by index change)
+  // Keyed on `step`, not `index`. A round that wraps back to A leaves index at
+  // 0, so an index-keyed effect never fires — and React bails out of the
+  // re-render entirely when the value is unchanged — so the game ran one pass
+  // through the alphabet and then silently stopped. step always increments,
+  // which also makes Play Again work from the finished screen.
   useEffect(() => {
-    if (letters.length > 0 && startedRef.current && index > 0 && phase !== 'complete') {
-      runSequence(letters[index], completions);
-    }
+    if (step === 0) return;
+    if (letters.length === 0 || !startedRef.current) return;
+    runSequence(letters[index], completions);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [step]);
 
   async function handlePress() {
     if (phase !== 'button') return;
@@ -254,6 +259,7 @@ function SingleLetterGame() {
       await saveGameState('single', nextIndex, newCompletions);
     }
     setIndex(nextIndex);
+    setStep((s) => s + 1);
   }
 
   function handleCelebrationComplete() {
@@ -285,7 +291,7 @@ function SingleLetterGame() {
         </p>
         <div className="text-6xl">⭐⭐⭐</div>
         <div className="flex gap-4">
-          <button onClick={() => { setCompletions(0); setIndex(0); }} className="btn-kid bg-green-500">
+          <button onClick={() => { setCompletions(0); setIndex(0); setStep((s) => s + 1); }} className="btn-kid bg-green-500">
             🔄 Play Again
           </button>
           <button onClick={() => router.push('/')} className="btn-kid bg-blue-500">

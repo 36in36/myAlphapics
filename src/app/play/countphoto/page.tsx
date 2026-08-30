@@ -43,6 +43,7 @@ function CountPhoto() {
 
   const [scenes, setScenes] = useState<LoadedScene[]>([]);
   const [index, setIndex] = useState(0);
+  const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<Phase>('loading');
   const [tapped, setTapped] = useState<number[]>([]);
   const [childName, setChildName] = useState('');
@@ -115,12 +116,15 @@ function CountPhoto() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenes]);
 
+  // Keyed on `step` rather than `index`, for the same reason as the other
+  // counting modes: Play Again sets index back to 0, and an index-keyed effect
+  // never fires on a value that did not change. step always increments.
   useEffect(() => {
-    if (scenes.length > 0 && startedRef.current && index > 0 && phase !== 'complete') {
-      runScene();
-    }
+    if (step === 0) return;
+    if (scenes.length === 0 || !startedRef.current) return;
+    runScene();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [step]);
 
   async function handleTapRegion(regionIndex: number) {
     if (phase !== 'counting' || !currentScene) return;
@@ -176,6 +180,7 @@ function CountPhoto() {
       return;
     }
     setIndex(nextIndex);
+    setStep((s) => s + 1);
   }
 
   function handleCelebrationComplete() {
@@ -219,7 +224,7 @@ function CountPhoto() {
         <h1 className="text-center text-4xl font-extrabold text-rose-500">You counted every picture!</h1>
         <div className="text-6xl">⭐⭐⭐</div>
         <div className="flex gap-4">
-          <button onClick={() => { setIndex(0); startedRef.current = false; setPhase('counting'); runScene(); }} className="btn-kid bg-green-500">🔄 Play Again</button>
+          <button onClick={() => { setIndex(0); setStep((s) => s + 1); }} className="btn-kid bg-green-500">🔄 Play Again</button>
           <button onClick={() => router.push('/')} className="btn-kid bg-blue-500">🏠 Menu</button>
         </div>
       </div>

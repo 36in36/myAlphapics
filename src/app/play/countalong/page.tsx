@@ -139,9 +139,12 @@ function CountAlong() {
   // leaves index at 0, so an index-keyed effect never fires (and React bails out
   // of the re-render entirely when the value is unchanged) — the game counted
   // one pass and then silently stopped. step always increments.
+  //
+  // Deliberately no `phase !== .complete.` guard: the finished screen is where
+  // Play Again lives, and step only moves when something means to start a round.
   useEffect(() => {
     if (step === 0) return;
-    if (numbers.length === 0 || !startedRef.current || phase === 'complete') return;
+    if (numbers.length === 0 || !startedRef.current) return;
     runSequence(numbers[index]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
