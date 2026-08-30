@@ -62,6 +62,9 @@ export default function Home() {
         <a href="/play/adaptive/" className="btn-kid bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-center text-xl shadow-lg">
           🧠 Smart Practice
         </a>
+        <a href="/play/numbers/" className="btn-kid bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-center text-xl shadow-lg">
+          🧮 Numbers Practice
+        </a>
         <a href="/play/" className="btn-kid bg-green-500 text-center">
           🎮 Play Game
         </a>

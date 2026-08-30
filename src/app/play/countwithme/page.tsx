@@ -45,6 +45,7 @@ function CountWithMe() {
 
   const [numbers, setNumbers] = useState<number[]>([]);
   const [index, setIndex] = useState(0);
+  const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<Phase>('loading');
   const [tiles, setTiles] = useState<CountTile[]>([]);
   const [counted, setCounted] = useState<string[]>([]);
@@ -165,12 +166,16 @@ function CountWithMe() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, numbers]);
 
+  // Keyed on `step`, not `index`. A round that wraps back to the first number
+  // leaves index at 0, so an index-keyed effect never fires (and React bails out
+  // of the re-render entirely when the value is unchanged) — the game counted
+  // one pass and then silently stopped. step always increments.
   useEffect(() => {
-    if (numbers.length > 0 && startedRef.current && index > 0 && phase !== 'complete') {
-      runSequence(numbers[index]);
-    }
+    if (step === 0) return;
+    if (numbers.length === 0 || !startedRef.current || phase === 'complete') return;
+    runSequence(numbers[index]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [step]);
 
   async function advance() {
     const newSince = sinceCelebration + 1;
@@ -218,6 +223,7 @@ function CountWithMe() {
 
     if (!adaptiveRef.current) await saveGameState('countwithme', nextIndex, newCompletions);
     setIndex(nextIndex);
+    setStep((s) => s + 1);
   }
 
   function handleCelebrationComplete() {
@@ -244,7 +250,7 @@ function CountWithMe() {
         <h1 className="text-center text-4xl font-extrabold text-amber-500">You counted them all!</h1>
         <div className="text-6xl">⭐⭐⭐</div>
         <div className="flex gap-4">
-          <button onClick={() => { setCompletions(0); setIndex(0); startedRef.current = false; }} className="btn-kid bg-green-500">🔄 Play Again</button>
+          <button onClick={() => { setCompletions(0); setIndex(0); setStep((s) => s + 1); }} className="btn-kid bg-green-500">🔄 Play Again</button>
           <button onClick={() => router.push('/')} className="btn-kid bg-blue-500">🏠 Menu</button>
         </div>
       </div>
